@@ -9,6 +9,7 @@ This layer defines how the agents coordinate.
 - define ownership boundaries
 - define hard gates and checkpoints
 - prevent overlap between agents
+- define shared contract files used between frontend and backend
 
 ## Files
 
@@ -19,3 +20,10 @@ This layer defines how the agents coordinate.
 - `EXCEPTIONS.md`
 - `CONFLICTS.md`
 - `START.md`
+- `ASSUMPTIONS.md`
+- `DECISIONS.md`
+- `translation.ts` rules for ID-based frontend i18n and lookup
+
+## Notes
+
+The frontend must use an ID-based translation layer. Visual text, labels, role names, and status strings should resolve through `translation.ts` or an equivalent contract, not hardcoded business names.
