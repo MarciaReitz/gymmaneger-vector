@@ -19,17 +19,14 @@ Owner: Claude. Task completion state for Claude-owned tasks. `roadmap/` is ChatG
 | TASK-035 | Design profile history tables | data-model/11-profile-history.md | 2026-07-09 |
 | TASK-049 | Define profile schema | data-model/02-users.md (profiles) | 2026-07-09 |
 | TASK-121 | Environment variables plan | ENVIRONMENT.md | 2026-07-09 |
+| — | Frontend integration contract v0.1 | FRONTEND_INTEGRATION_PHASE.md | 2026-07-09 |
 
-## Awaiting PO approval (Hard Gates)
+## Gate status (per GATES.md as of 2026-07-09, Build Mode)
 
-| Task | Reason |
-|---|---|
-| TASK-041 | Stripe product structure drafted in INTEGRATIONS.md — anything affecting Stripe is a Hard Gate |
-| TASK-030 matrix | Permission matrix drafted — access-control implementation is a Hard Gate |
-| EPIC 05 (TASK-036..040) | Auth implementation — Hard Gate + requires Supabase project (TASK-011, Marcia) |
-| EPIC 06 (TASK-042..048) | Billing implementation — Hard Gate + requires Stripe account (TASK-012, Marcia) |
+Auth, RBAC, Stripe, webhooks, migrations, and backend APIs may now be implemented in **dev/test mode** without stopping. Hard Gates remain only for production-affecting changes, merges to protected branches, destructive operations, and cross-agent architecture decisions.
 
-## Blocked (dependencies)
+## Blocked (dependencies, not gates)
 
-- All remaining Claude "Implement" tasks (EPICs 07–15, 17, 18) require: app scaffold decision (shared `app/` area — needs Orquestra coordination with Antigravity), TASK-129 approval (start of implementation), and EPIC 02 manual accounts (Marcia).
-- EPIC 03 (architecture, ChatGPT) still pending; `engine/ARCHITECTURE.md` covers backend scope only and defers to TASK-019 output.
+- **`app/` scaffold** — shared area with Antigravity; creating the project skeleton is a cross-agent architecture decision → still a Hard Gate. Proposed layout in FRONTEND_INTEGRATION_PHASE.md §8 awaits Orquestra/PO decision. This blocks all backend "Implement" tasks (EPICs 05–15, 17, 18).
+- **EPIC 02 accounts (Marcia)** — Supabase and Stripe dev projects are required for auth/billing implementation even in dev mode.
+- **EPIC 03 (architecture, ChatGPT)** still pending; `engine/ARCHITECTURE.md` covers backend scope only and defers to TASK-019 output.

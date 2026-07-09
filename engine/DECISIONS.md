@@ -16,3 +16,5 @@ Owner: Claude. Non-critical decisions recorded per Autonomous Build mode. Critic
 | D-010 | 2026-07-09 | Professor-managed evolution data kept out of `profiles` (separate `student_ranks`, `professor_notes`) | Keeps profile lightweight (TASK-049) and field-level permissions clean |
 | D-011 | 2026-07-09 | Money as integer minor units + ISO 4217 currency | Standard practice; avoids float errors |
 | D-012 | 2026-07-09 | Class/session tables designed inside TASK-032 scope, anticipating EPIC 10 FKs | Attendance FKs need stable targets; avoids rework |
+| D-013 | 2026-07-09 | Backend↔frontend contract lives in `engine/FRONTEND_INTEGRATION_PHASE.md`; two channels only (supabase-js reads under RLS + `/api/*` for all mutations) | Gives Antigravity a stable surface without exposing backend internals; RLS remains the security boundary |
+| D-014 | 2026-07-09 | Stable machine error codes in a fixed envelope for all API errors | Frontend can branch on codes; no internal detail leakage |
