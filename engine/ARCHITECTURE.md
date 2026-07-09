@@ -8,7 +8,7 @@ Owner: Claude. Scope: backend technical architecture only. Product-level system 
 |---|---|---|
 | Database | Supabase Postgres | Managed Postgres with RLS, matches TASK-011 |
 | Auth | Supabase Auth | JWT + refresh sessions, OAuth-ready |
-| API | Next.js route handlers (Vercel) | Single deployment target, matches TASK-013 |
+| API | Standalone TypeScript service (Hono on Node) | Frontend is a Vite SPA (`gymmanager/frontend/`), so the API is a separate service (`gymmanager/backend/`); D-015 supersedes the earlier Next.js plan |
 | Billing | Stripe | Webhook is the source of truth for paid access |
 | Storage | Supabase Storage | Profile photo only (MVP constraint) |
 

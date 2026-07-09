@@ -2,7 +2,9 @@
 
 Owner: Claude (backend side of the contract). Consumer: Antigravity / Antenor (frontend). This document defines **what the backend exposes and guarantees** so the frontend can integrate without reading backend internals. Frontend implementation choices (components, state, styling) are entirely Antigravity's and are out of scope here.
 
-Status: contract v0.1 — dev/test mode per GATES.md Build Mode. Nothing here touches production.
+Status: contract v0.2 — **implemented** in `gymmanager/backend/` (dev/test mode). Base URL in dev: `http://localhost:8787`. All endpoints below exist; auth is `Authorization: Bearer <supabase JWT>`.
+
+**Mandatory translation layer:** every text, label, state, and display name in the UI resolves through `gymmanager/shared/translation.ts` (key→label catalogs; entity display names via the ID-based `DisplayNameResolver`). Never hardcode business names or status strings in components.
 
 ## 1. Integration model
 
@@ -77,8 +79,7 @@ Sequencing of frontend tasks is orchestration (ChatGPT); this table only states 
 - The frontend must not depend on table names or columns beyond what RLS-protected reads expose for the read paths listed above.
 - Mock data used by the frontend before backend readiness must match the shapes in this contract.
 
-## 8. Open items (need Orquestra / PO)
+## 8. Open items
 
-- `app/` scaffold: shared area (Claude backend zones + Antigravity frontend zones). Creating the project skeleton affects both agents → needs an Orquestra decision on repo layout (suggested: `gymmanager/app/` Next.js monorepo, backend zones = `app/api/**`, `lib/server/**`; frontend zones = everything else).
-- Confirmation that gymmanager repo is the application repo.
-- Supabase/Stripe dev accounts (EPIC 02, Marcia) for FI-1 onward.
+- ~~`app/` scaffold~~ Resolved (ASSUMPTIONS.md A-001/A-002): `gymmanager/frontend/` (Vite SPA, Antigravity), `gymmanager/backend/` (Hono service, Claude), `gymmanager/shared/` (contracts).
+- Supabase/Stripe **dev** accounts (EPIC 02, Marcia) — required to run FI-1 end-to-end; only the PO handles credentials (Hard Gate).
