@@ -2,20 +2,20 @@
 
 Owner: Claude (backend side of the contract). Consumer: Antigravity / Antenor (frontend). This document defines **what the backend exposes and guarantees** so the frontend can integrate without reading backend internals. Frontend implementation choices (components, state, styling) are entirely Antigravity's and are out of scope here.
 
-Status: contract v0.2 — **implemented** in `gymmanager/backend/` (dev/test mode). Base URL in dev: `http://localhost:8787`. All endpoints below exist; auth is `Authorization: Bearer <supabase JWT>`.
+Status: contract **v1 (API First)** — implemented in `gymmanager/backend/` (dev/test mode). Base URL in dev: `http://localhost:8787/api/v1`. Swagger UI: `/api/v1/docs`. Canonical onboarding doc: **`gymmanager/HANDOFF.md`**; typed contracts: `gymmanager/shared/contracts/v1.ts`.
 
 **Mandatory translation layer:** every text, label, state, and display name in the UI resolves through `gymmanager/shared/translation.ts` (key→label catalogs; entity display names via the ID-based `DisplayNameResolver`). Never hardcode business names or status strings in components.
 
-## 1. Integration model
+## 1. Integration model (API First — PO directive 2026-07-09)
 
-The frontend talks to the backend through exactly two channels:
+**The frontend never accesses the database.** Supabase is a persistence layer owned by the backend; there is exactly one data channel:
 
 | Channel | Use | Rule |
 |---|---|---|
-| Supabase client (supabase-js) | Auth (sign-in/up/out, session refresh) and **read-only** queries on RLS-protected tables | RLS is the security boundary; the client never receives service-role keys |
-| Backend API (Next.js route handlers, `/api/*`) | **All mutations** and any logic beyond a plain read (check-in, payments, posts, role grants) | Every handler re-validates session → membership → permission server-side |
+| Supabase Auth (supabase-js) | Sign-in/up/out and session refresh ONLY — identity provider, not data | Public anon key is used for Auth exclusively; data queries via supabase-js are forbidden |
+| Backend API (`/api/v1/*`) | **Everything else** — every read and every mutation | Gateway → Service → Repository; every request re-validates session → membership → permission server-side |
 
-Realtime (occupancy, feed updates) uses Supabase Realtime subscriptions on RLS-protected tables.
+Realtime niceties (live occupancy) are handled by polling `GET /sessions/:id/occupancy` in MVP; a push channel, if ever added, will be exposed by the backend — never by direct DB subscriptions.
 
 ## 2. Identity and session contract
 
@@ -37,22 +37,24 @@ Derived exclusively from webhook-confirmed Stripe state (never from client-side 
 | `PAST_DUE` | Full app + persistent billing warning banner |
 | `LOCKED` | Billing/lock screen only; navigation blocked |
 
-## 4. API surface (contract level)
+## 4. API surface (contract v1)
 
-Full request/response schemas will live in `engine/api/` as they are implemented; this table is the stable surface.
+The authoritative, always-current surface is the OpenAPI spec (`backend/openapi/openapi.v1.yaml`, rendered at `/api/v1/docs`) plus the typed contracts (`shared/contracts/v1.ts`). Summary (all paths relative to `/api/v1`):
 
 | Domain | Endpoints | Notes |
 |---|---|---|
-| Bootstrap | `GET /api/me` | session, memberships, roles, entitlements |
-| Academy structure | `GET/POST/PATCH /api/academies/:id/branches`, `.../rooms`, `.../modalities`, `.../classes` | admin only; reads may also go via supabase-js |
-| Profile | `GET /api/profiles/:id`, `PATCH /api/profiles/:id` (student fields), `GET /api/profiles/:id/history` | field-level permissions enforced server-side |
-| Evolution | `POST /api/students/:id/ranks`, `POST /api/students/:id/notes` | professor permission `profile.evolution.edit` |
-| Attendance | `GET /api/sessions?class_id=&from=&to=`, `POST /api/sessions/:id/attendance` (manual mark), `POST /api/checkin` `{ token }` (QR), `GET /api/sessions/:id/occupancy` | occupancy also via Realtime |
-| Feed | `GET /api/feed?academy_id=` (targeting resolved server-side), `POST /api/posts`, `PATCH /api/posts/:id`, `POST /api/posts/:id/reactions` | |
-| Finance (tuition) | `GET /api/finance/summary?academy_id=`, `GET /api/students/:id/invoices`, `POST /api/invoices/:id/payments` (manual record) | admin/support read; student sees own |
-| SaaS billing | `POST /api/billing/checkout`, `POST /api/billing/portal`, `POST /api/webhooks/stripe` | webhook is backend-only; frontend just redirects to returned URLs |
-| Dashboards | `GET /api/dashboards/admin`, `/professor`, `/student` (+ `academy_id`) | role-gated aggregates |
-| Notifications | `GET /api/notifications`, `PATCH /api/notifications/:id/read` | |
+| Bootstrap | `GET /me` | session, memberships, roles, permissions, entitlements |
+| Academy structure | `POST /academies`, `POST /academies/{branches,rooms,modalities,classes}` | admin only |
+| Profile | `GET/PATCH /profiles/:id`, `GET /profiles/:id/history` | field-level permissions enforced server-side |
+| Evolution | `POST /students/:id/ranks`, `POST /students/:id/notes` | professor permission `profile.evolution.edit` |
+| Attendance | `GET/POST /sessions`, `POST /sessions/:id/qr`, `POST /sessions/:id/attendance`, `GET /sessions/:id/occupancy`, `POST /checkin` | occupancy by polling in MVP |
+| Feed | `GET /feed?academy_id=` (targeting resolved server-side), `POST /feed/posts`, `PATCH /feed/posts/:id/pin`, `POST /feed/posts/:id/reactions` | |
+| Finance (tuition) | `GET /finance/summary?academy_id=`, `POST /finance/plans`, `POST /finance/invoices`, `POST /finance/invoices/:id/payments`, `GET /students/:id/invoices` | admin/support read; student sees own |
+| SaaS billing | `POST /billing/checkout`, `POST /billing/portal`, `POST /webhooks/stripe` | webhook is backend-only; frontend just redirects to returned URLs |
+| Dashboards | `GET /dashboards/{admin,professor,student}?academy_id=` | role-gated aggregates |
+| Notifications | `GET /notifications`, `PATCH /notifications/:id/read` | |
+
+Contract versioning: additive changes stay in v1; breaking changes ship as `/api/v2` + `contracts/v2.ts` with both versions running during migration (`shared/contracts/CHANGELOG.md`).
 
 ## 5. Error contract
 
@@ -75,9 +77,9 @@ Sequencing of frontend tasks is orchestration (ChatGPT); this table only states 
 
 ## 7. Contract stability rules
 
-- Breaking changes to any endpoint above require a version note in this file and coordination through Orquestra — never silent.
-- The frontend must not depend on table names or columns beyond what RLS-protected reads expose for the read paths listed above.
-- Mock data used by the frontend before backend readiness must match the shapes in this contract.
+- Breaking changes to any endpoint above require a new API version (`/api/v2`) and coordination through Orquestra — never silent.
+- The frontend must not depend on database table names or columns at all — only on the shapes in `shared/contracts/v1.ts`.
+- Mock data used by the frontend before backend readiness must match the shapes in `shared/contracts/v1.ts`.
 
 ## 8. Open items
 

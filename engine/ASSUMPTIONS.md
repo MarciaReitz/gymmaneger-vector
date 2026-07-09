@@ -12,3 +12,5 @@ Owner: Claude. Working assumptions made during Autonomous Build; each one is rev
 | A-006 | 2026-07-09 | Feed `branch` targeting behaves as academy-wide in MVP | No branch-membership model exists yet; revisit when it does |
 | A-007 | 2026-07-09 | Invoices are issued via API/manually in MVP; overdue status computed on read and re-derived on payment | No job scheduler in MVP scope |
 | A-008 | 2026-07-09 | Migration apply in the DEV Supabase project is authorized (non-destructive, CREATE-only); staging/production apply remains a Hard Gate | GATES.md Build Mode |
+| A-009 | 2026-07-09 | Swagger UI and the OpenAPI spec are served without auth in dev (`/api/v1/docs`); production exposure will be decided at deploy gate | Contract is not a secret; deploy is a Hard Gate anyway |
+| A-010 | 2026-07-09 | `HANDOFF.md` lives at the `gymmanager` repo root with named owner Claude (shared-file rule) | Highest visibility for the frontend agent; OWNERSHIP.md requires a named owner for shared files |

@@ -2,7 +2,7 @@
 
 Owner: Claude. Task completion state for Claude-owned tasks. `roadmap/` is ChatGPT-owned; ChatGPT should sync ROADMAP_MASTER from this ledger (DECISIONS.md D-005).
 
-Code: `gymmanager/backend/` + `gymmanager/shared/translation.ts`, branch `claude/backend-bootstrap` (23 unit tests passing, typecheck clean). Design docs: `engine/`.
+Code: `gymmanager/backend/` + `gymmanager/shared/`, branch `claude/backend-bootstrap` (28 unit tests passing, typecheck clean, gateway smoke-tested). Design docs: `engine/`.
 
 ## Completed — design (2026-07-09)
 
@@ -29,6 +29,21 @@ Code: `gymmanager/backend/` + `gymmanager/shared/translation.ts`, branch `claude
 | TASK-106..109 | Audit schema; auth/billing/profile audit events | migrations 0009, `src/audit.ts` |
 | TASK-116..118 | Backend, webhook, and auth/RBAC unit tests (23 passing) | `src/*.test.ts` |
 | — | translation.ts contract (PO directive) | `shared/translation.ts` + tests |
+
+## Completed — API First refactor (PO directive, 2026-07-09)
+
+| Deliverable | Location |
+|---|---|
+| Repository Layer (only Supabase callers) | `src/repositories/` (9 modules) |
+| Service Layer (business logic + authorization) | `src/services/` (12 modules) |
+| API Gateway Layer (`/api/v1`, auth, validation, error envelope, CORS, logging) | `src/gateway/` (12 modules) + `src/app.ts` |
+| API Contracts v1 (typed) | `shared/contracts/v1.ts` + `CHANGELOG.md` |
+| OpenAPI 3.0 + Swagger UI | `backend/openapi/openapi.v1.yaml`, served at `/api/v1/docs` |
+| Contract versioning policy | HANDOFF.md + contracts CHANGELOG (D-021) |
+| HANDOFF.md (frontend onboarding) | `gymmanager/HANDOFF.md` |
+| Service-layer test with fake repositories (check-in flow, 5 cases) | `src/services/attendance.test.ts` |
+
+Old `src/routes/` (direct-DB handlers), `src/audit.ts`, `src/notify.ts` removed; base path moved from `/api/*` to `/api/v1/*` (no consumers existed). Verified: typecheck clean, 28/28 tests, `/health` + `/api/v1/openapi.yaml` + `/api/v1/docs` + 401 envelope smoke-tested live.
 
 Migrations 0001–0010 are written but **not applied** (no Supabase project exists).
 

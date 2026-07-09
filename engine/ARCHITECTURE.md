@@ -12,10 +12,22 @@ Owner: Claude. Scope: backend technical architecture only. Product-level system 
 | Billing | Stripe | Webhook is the source of truth for paid access |
 | Storage | Supabase Storage | Profile photo only (MVP constraint) |
 
+## API First (PO directive, 2026-07-09)
+
+**All frontend↔data communication goes exclusively through the Backend API.** Supabase is a persistence layer; the frontend never accesses the database directly (sole exception: Supabase Auth as identity provider). The backend is layered:
+
+| Layer | Location | Responsibility |
+|---|---|---|
+| API Gateway | `backend/src/gateway/` + `app.ts` | HTTP entry point under `/api/v1`; auth middleware, zod validation, CORS, logging, stable error envelope |
+| Services | `backend/src/services/` | Business logic; membership + permission checks; audit/notification side effects |
+| Repositories | `backend/src/repositories/` | The ONLY layer that talks to Supabase |
+
+Import rules: gateway → services → repositories, never skipping or reversing. Contracts are versioned (`shared/contracts/v1.ts`, OpenAPI at `backend/openapi/openapi.v1.yaml`, Swagger UI at `/api/v1/docs`); breaking changes require `/api/v2`. Frontend handoff: `gymmanager/HANDOFF.md`.
+
 ## Multi-tenancy
 
 - Tenant unit: **academy**. Every tenant-scoped table carries `academy_id uuid not null` referencing `academies.id`.
-- Isolation is enforced by Postgres Row Level Security on every tenant table. Policies validate membership through `academy_members` by ID.
+- Isolation is enforced server-side by the service layer (membership by ID on every request). Postgres RLS remains enabled on every tenant table as **defense in depth** — with API First the anon key is never used for data, so RLS is the safety net, not the primary boundary.
 - Single database, shared schema. Schema-per-tenant was rejected (see DECISIONS.md D-002).
 
 ## Identity and keys
@@ -31,7 +43,7 @@ Owner: Claude. Scope: backend technical architecture only. Product-level system 
 3. The webhook handler records the event in `webhook_events` (idempotent by provider event ID) and updates `academy_subscriptions`.
 4. Entitlements are derived exclusively from webhook-confirmed subscription state. No client- or UI-initiated write can grant paid access.
 
-Implementation of this flow (EPIC 05, EPIC 06) is behind Hard Gates (auth, billing) and requires PO approval before any code or Stripe configuration.
+Implemented in dev/test mode (services/webhook.ts, services/entitlement.ts) per GATES.md Build Mode. Live Stripe configuration and production billing remain Hard Gates.
 
 ## Environments
 
