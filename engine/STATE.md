@@ -45,6 +45,23 @@ Code: `gymmanager/backend/` + `gymmanager/shared/`, branch `claude/backend-boots
 
 Old `src/routes/` (direct-DB handlers), `src/audit.ts`, `src/notify.ts` removed; base path moved from `/api/*` to `/api/v1/*` (no consumers existed). Verified: typecheck clean, 28/28 tests, `/health` + `/api/v1/openapi.yaml` + `/api/v1/docs` + 401 envelope smoke-tested live.
 
+## Completed — Backend Sprint 1 (2026-07-10)
+
+Contract v1.1 (additive — see shared/contracts/CHANGELOG.md):
+
+| Sprint item | Delivered |
+|---|---|
+| Login / Auth / RBAC | Already live (Supabase JWT + `/me` + permission matrix) — no changes needed |
+| CRUD Academia | `GET /academies`, `GET/PATCH /academies/:id`, `GET /academies/structure`, `PATCH /academies/{branches,rooms,modalities,classes}/:id` |
+| CRUD Professor / Aluno | `POST /people` (user_id or email invite), `GET /professors`, `GET /students`, `PATCH /students/:id/status`, `PATCH /people/:memberId/end` |
+| CRUD Plano | `GET /finance/plans`, `PATCH /finance/plans/:id` (price immutable — A-011) |
+| CRUD Turma | via structure endpoints (create/list/update/archive classes) |
+| Matrículas | `POST/GET /enrollments`, `PATCH /enrollments/:id/status` (single active per student, DB-enforced) |
+| Presença | already live + `GET /sessions/:id/attendance` |
+| Dashboard API | already live (admin/professor/student) |
+
+New: `services/people.ts`, `services/enrollment.ts`, `repositories/enrollments.ts`, `gateway/{people,professors,enrollments}.ts`, `supabase/seed.dev.sql`, 11 new service tests (39/39 total). Prisma NOT adopted (A-012). Verified: typecheck clean, YAML spec parse-validated, all new routes mounted (401 without token).
+
 Migrations 0001–0010 are written but **not applied** (no Supabase project exists).
 
 ## Partially blocked (need Marcia's EPIC 02 accounts)
