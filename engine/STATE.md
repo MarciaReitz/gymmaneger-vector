@@ -64,6 +64,21 @@ New: `services/people.ts`, `services/enrollment.ts`, `repositories/enrollments.t
 
 Migrations 0001–0010 are written but **not applied** (no Supabase project exists).
 
+## Completed — Backend Sprint 2: production-ready hardening (2026-07-10)
+
+Contract v1.2 (additive):
+
+| Deliverable | Where |
+|---|---|
+| Canonical env contract (6 vars) + legacy alias | `src/env.ts`, `.env.example`, `ENVIRONMENT.md` |
+| Prisma adopted gradually (D-024): full schema (30 models) + generated client; SQL migrations remain DDL source of truth | `backend/prisma/schema.prisma`, `prisma.config.ts` |
+| Setup documentation (go-live = configuration only) | `backend/README.md`, `backend/SETUP.md` |
+| Global error handling: 404 + onError in envelope; uuid validation on path params | `src/app.ts`, `src/http.ts` |
+| Structured JSON logging + `x-request-id` | `src/logger.ts`, `src/http.ts` |
+| Pagination/filter/sort (D-025) on students, professors, enrollments, sessions, invoices, notifications (+`unread` filter) | gateway/services/repositories |
+| Gateway integration tests (9 cases: auth, 404, validation, pagination, checkin pipeline) via repos DI seam | `src/gateway/gateway.test.ts`, `setRepos()` |
+| Coverage tooling (`npm run test:coverage`) | 48 tests; 35.7% lines overall — pure domain logic 100%, repositories ~0% (need real DB → E2E phase) |
+
 ## Partially blocked (need Marcia's EPIC 02 accounts)
 
 - TASK-036 (Supabase Auth actually configured), TASK-041 (Stripe products actually created), TASK-122 (Supabase deployment prep) — code and design ready; provisioning needs the dev accounts and credentials (Hard Gate: only the PO handles credentials).

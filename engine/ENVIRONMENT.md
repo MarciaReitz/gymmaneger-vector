@@ -1,29 +1,36 @@
 # Environment Variables Plan (TASK-121)
 
-Owner: Claude. This is the plan only — no secrets are stored here or anywhere in the repositories.
+Owner: Claude. This is the plan only — no secrets are stored here or anywhere in the repositories. Canonical contract fixed by PO directive (Sprint 2); working reference: `gymmanager/backend/.env.example` + `SETUP.md`.
 
-## Secrets (server-only, never exposed to the client)
+## Backend (server-only)
 
 | Variable | Purpose |
 |---|---|
-| `SUPABASE_SERVICE_ROLE_KEY` | Server-side privileged database access |
-| `SUPABASE_JWT_SECRET` | JWT verification |
+| `SUPABASE_URL` | Supabase project URL |
+| `SUPABASE_ANON_KEY` | Validates user JWTs (identity only — never used for data) |
+| `SUPABASE_SERVICE_ROLE` | Privileged persistence access (repository layer only) |
+| `DATABASE_URL` | Direct Postgres connection (Prisma tooling / migrations) |
 | `STRIPE_SECRET_KEY` | Stripe API (server) |
 | `STRIPE_WEBHOOK_SECRET` | Webhook signature validation |
-| `EMAIL_PROVIDER_API_KEY` | Transactional email |
-| `MONITORING_DSN` | Error monitoring |
+| `APP_URL` | Frontend origin (CORS) |
+| `PORT` | HTTP port (default 8787) |
+| `DEV_ENTITLEMENT_BYPASS` | Dev-only; never set in production |
 
-## Public (safe for client bundle)
+`SUPABASE_SERVICE_ROLE_KEY` is accepted as a legacy alias for `SUPABASE_SERVICE_ROLE`.
+
+## Frontend (public, Vite)
+
+With API First the frontend needs only Supabase Auth (identity) and the API base URL — no data keys:
 
 | Variable | Purpose |
 |---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public anon key (RLS-protected) |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe.js |
-| `NEXT_PUBLIC_APP_URL` | Canonical app URL |
+| `VITE_SUPABASE_URL` | Supabase Auth |
+| `VITE_SUPABASE_ANON_KEY` | Supabase Auth (public anon key) |
+| `VITE_API_URL` | Backend base URL (`/api/v1`) |
 
 ## Rules
 
 - Separate values per environment (local / staging / production); staging uses Stripe test mode.
-- Secrets live only in Vercel/Supabase environment configuration, never in git.
+- Secrets live only in the hosts' secret stores, never in git; only the PO handles credentials (Hard Gate).
 - Rotation of any production secret is a deploy-adjacent operation → Hard Gate.
+- Email provider and monitoring variables will be added when those integrations enter scope (TASK-015/018).
